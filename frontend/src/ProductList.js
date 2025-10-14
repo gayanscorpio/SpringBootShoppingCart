@@ -3,6 +3,7 @@ import { useQuery, useSubscription, useMutation } from '@apollo/client/react';
 import { useDispatch, useSelector } from "react-redux";
 import { GET_PRODUCTS, PRODUCT_ADDED, DELETE_PRODUCT } from "./graphql/productQueries";
 import { setProducts, deleteProduct, addProducts } from "./slices/ProductSlice";
+import ProductItem from "./ProductItem";
 
 function ProductList() {
 
@@ -46,12 +47,16 @@ function ProductList() {
         <div>
             <h2>Product List</h2>
             <ul>
-                {products.map(p => (
-                    <li key={p.id}>
-                        {p.name} - ${p.price}
-                        <button onClick={() => handleDelete(p.id)}>Delete</button>
-                    </li>
-                ))}
+                {products.map(p => {
+                    const price = Number(p.price);
+                    return (
+                        <ProductItem
+                            key={p.id}
+                            product={{ ...p, price }} // ensure price is a number
+                            onDelete={handleDelete}
+                        />
+                    );
+                })}
             </ul>
         </div>
     );
