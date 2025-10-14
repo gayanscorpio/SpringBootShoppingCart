@@ -15,6 +15,23 @@ input CreateProductInput {
   sku: String
 }
 
+type CartItem {
+  id: ID!
+  product: Product!
+  quantity: Int!
+}
+
+type Cart {
+  id: ID!
+  userId: String!
+  items: [CartItem!]!
+}
+
+input AddToCartInput {
+  productId: ID!
+  quantity: Int = 1
+}
+
 input UpdateProductInput {
   name: String
   description: String
@@ -25,6 +42,7 @@ input UpdateProductInput {
 type Query {
   products: [Product]
   productById(id: ID!): Product
+  cart(userId: String!): Cart
   hello: String
   testProducts: [TestProduct]
 }
@@ -33,6 +51,8 @@ type Mutation {
   createProduct(input: CreateProductInput!): Product
   updateProduct(id: ID!, input: UpdateProductInput!): Product
   deleteProduct(id: ID!): Boolean
+  addToCart(userId: String!, input: AddToCartInput!): Cart
+  removeFromCart(userId: String!, productId: ID!): Cart
 }
 
 type Subscription {

@@ -1,5 +1,7 @@
 package com.service.dgs.shopping.subscription;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Component;
 import com.netflix.graphql.dgs.DgsSubscription;
 import com.service.dgs.shopping.model.Product;
@@ -10,6 +12,7 @@ import java.math.BigDecimal;
 
 @Component
 public class ProductSubscription {
+	private static final Logger logger = LogManager.getLogger(ProductSubscription.class);
 
 	// 🔹 Multicast sink: every subscriber gets the same events
 	private final Sinks.Many<Product> sink = Sinks.many().multicast().onBackpressureBuffer();
@@ -34,7 +37,7 @@ public class ProductSubscription {
 	 */
 	@DgsSubscription
 	public Flux<Product> productAdded() {
-		return sink.asFlux();
+		return sink.asFlux().doOnCancel(() -> logger.info("Subscription cancelled"));
 	}
 
 	/**
