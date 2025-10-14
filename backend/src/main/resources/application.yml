@@ -1,0 +1,22 @@
+server:
+  port: 8080
+
+spring:
+  main:
+    web-application-type: reactive
+  r2dbc:
+    url: r2dbc:mysql://localhost:3306/shopdb
+    username: root
+    password: Scorpio123
+  sql:
+    init:
+      mode: always
+
+dgs:
+  graphql:
+    path: /graphql
+    subscriptions:
+      enabled: true
+      path: /subscriptions
+  graphiql:
+    enabled: false  # Must be false for WebFlux

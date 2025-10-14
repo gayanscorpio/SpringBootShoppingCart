@@ -1,0 +1,12 @@
+# backend
+backend/target/
+backend/.idea/
+backend/*.iml
+
+# frontend
+frontend/node_modules/
+frontend/build/
+
+# general
+*.log
+

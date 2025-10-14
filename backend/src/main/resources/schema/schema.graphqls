@@ -1,0 +1,47 @@
+scalar BigDecimal
+
+type Product {
+  id: ID!
+  name: String!
+  description: String
+  price: BigDecimal!
+  sku: String
+}
+
+input CreateProductInput {
+  name: String!
+  description: String
+  price: BigDecimal!
+  sku: String
+}
+
+input UpdateProductInput {
+  name: String
+  description: String
+  price: BigDecimal
+  sku: String
+}
+
+type Query {
+  products: [Product]
+  productById(id: ID!): Product
+  hello: String
+  testProducts: [TestProduct]
+}
+
+type Mutation {
+  createProduct(input: CreateProductInput!): Product
+  updateProduct(id: ID!, input: UpdateProductInput!): Product
+  deleteProduct(id: ID!): Boolean
+}
+
+type Subscription {
+  productAdded: Product
+  expensiveProducts: Product
+}
+
+type TestProduct {
+  id: ID!
+  name: String!
+  price: Float!
+}
