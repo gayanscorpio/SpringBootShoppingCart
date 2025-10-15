@@ -20,7 +20,10 @@ const productSlice = createSlice({
         },
         //Add a new product to the list.
         addProducts: (state, action) => {
-            state.items.push(action.payload); //→ a single product object.
+            const exists = state.items.find(p => p.id === action.payload.id);
+            if (!exists) {
+                state.items.push(action.payload);
+            }//→ a single product object.
             //example: dispatch(addProduct({ id: 2, name: "Phone" }));
         },
         updateProducts: (state, action) => {

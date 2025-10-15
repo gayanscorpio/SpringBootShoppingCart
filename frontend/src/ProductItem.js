@@ -6,26 +6,30 @@ function ProductItem({ product, onDelete }) {
     const dispatch = useDispatch();
 
     const handleAddToCart = () => {
-        dispatch(addItem(product));
+        // add with quantity
+        dispatch(addItem({ ...product, quantity: 1 }));
     };
 
     return (
         <li style={{ marginBottom: "10px" }}>
-            {product.name} - ${product.price.toFixed(2)}
+            <div>
+                <strong>{product.name}</strong> - ${Number(product.price).toFixed(2)}
+                <button
+                    onClick={handleAddToCart}
+                    style={{ marginLeft: "10px", background: "green", color: "white" }}
+                >
+                    🛒 Add to Cart
+                </button>
+            </div>
 
-            <button
-                onClick={handleAddToCart}
-                style={{ marginLeft: "10px", background: "green", color: "white" }}
-            >
-                🛒 Add to Cart
-            </button>
-
-            <button
-                onClick={() => onDelete(product.id)}
-                style={{ marginLeft: "10px", background: "red", color: "white" }}
-            >
-                ❌ Delete
-            </button>
+            {onDelete && (
+                <button
+                    onClick={() => onDelete(product.id)}
+                    style={{ marginLeft: "10px", background: "red", color: "white" }}
+                >
+                    ❌ Delete
+                </button>
+            )}
         </li>
     );
 }

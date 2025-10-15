@@ -4,9 +4,9 @@ import { removeItem, clearCart } from "./slices/cartSlice";
 
 function ShoppingCart() {
     const dispatch = useDispatch();
-    const cartItems = useSelector(state => state.cart.items);
+    const cartItems = useSelector(state => state.carts.items);
 
-    const total = cartItems.reduce((sum, item) => sum + item.price, 0);
+    const total = cartItems.reduce((sum, item) => sum + Number(item.price), 0);
 
     if (cartItems.length === 0) {
         return <p>Your cart is empty 🛒</p>;

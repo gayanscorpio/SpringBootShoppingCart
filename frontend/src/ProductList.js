@@ -8,7 +8,7 @@ import ProductItem from "./ProductItem";
 function ProductList() {
 
     const dispatch = useDispatch();
-    const products = useSelector(state => state.products.items);
+    const products = useSelector(state => state.products?.items || []); //products?.items || [] prevents undefined errors.
 
     // Initial fetch + polling
     const { loading, error, data } = useQuery(GET_PRODUCTS);
@@ -30,7 +30,7 @@ function ProductList() {
 
     // Handle subscription data
     useEffect(() => {
-        if (subData) {
+        if (subData?.productAdded) {
             dispatch(addProducts(subData.productAdded));
         }
     }, [subData, dispatch]);
@@ -47,16 +47,13 @@ function ProductList() {
         <div>
             <h2>Product List</h2>
             <ul>
-                {products.map(p => {
-                    const price = Number(p.price);
-                    return (
-                        <ProductItem
-                            key={p.id}
-                            product={{ ...p, price }} // ensure price is a number
-                            onDelete={handleDelete}
-                        />
-                    );
-                })}
+                {products.map((p, index) => (
+                    <ProductItem
+                        key={`${p.id}-${index}`}   // ensures uniqueness
+                        product={{ ...p, price: Number(p.price) }}
+                        onDelete={handleDelete}
+                    />
+                ))}
             </ul>
         </div>
     );

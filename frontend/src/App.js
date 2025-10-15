@@ -1,12 +1,14 @@
 import AddProduct from './AddProduct';
-import ProductList from './ProductList'
+import ProductList from './ProductList';
+import Cart from './Cart';
 
 function App() {
   return (
-    <div>
-      <h1>Shopping Cart</h1>
+    <div style={{ padding: "20px" }}>
+      <h1>Shopping App</h1>
       <AddProduct />
       <ProductList />
+      <Cart /> {/* ✅ Show cart below products */}
     </div>
   );
 }
