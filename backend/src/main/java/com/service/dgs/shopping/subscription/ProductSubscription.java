@@ -23,10 +23,11 @@ public class ProductSubscription {
 	 * @param product the newly created or updated product
 	 */
 	public void publish(Product product) {
+		logger.info("Publishing product event: ID={}, Name={}, Price={}", product.getId(), product.getName(),
+				product.getPrice());
 		Sinks.EmitResult result = sink.tryEmitNext(product);
 		if (result.isFailure()) {
-			// log or handle failed emission
-			System.err.println("Failed to emit product event: " + result);
+			logger.error("Failed to emit product event: {}", result);
 		}
 	}
 
@@ -37,7 +38,9 @@ public class ProductSubscription {
 	 */
 	@DgsSubscription
 	public Flux<Product> productAdded() {
-		return sink.asFlux().doOnCancel(() -> logger.info("Subscription cancelled"));
+		logger.info("New subscription to productAdded");
+		return sink.asFlux().doOnCancel(() -> logger.info("Subscription to productAdded cancelled"))
+				.doOnNext(p -> logger.debug("Emitting productAdded: ID={}, Name={}", p.getId(), p.getName()));
 	}
 
 	/**
@@ -47,13 +50,22 @@ public class ProductSubscription {
 	 */
 	@DgsSubscription
 	public Flux<Product> expensiveProducts() {
-		return sink.asFlux().filter(p -> p.getPrice() != null && p.getPrice().compareTo(BigDecimal.valueOf(100)) > 0);
+		logger.info("New subscription to expensiveProducts");
+		return sink.asFlux().filter(p -> {
+			boolean isExpensive = p.getPrice() != null && p.getPrice().compareTo(BigDecimal.valueOf(100)) > 0;
+			if (isExpensive) {
+				logger.debug("Emitting expensive product: ID={}, Name={}, Price={}", p.getId(), p.getName(),
+						p.getPrice());
+			}
+			return isExpensive;
+		}).doOnCancel(() -> logger.info("Subscription to expensiveProducts cancelled"));
 	}
 
 	/**
 	 * Optional: complete the sink (no more events)
 	 */
 	public void complete() {
+		logger.info("Completing product subscription sink");
 		sink.tryEmitComplete();
 	}
 
@@ -61,6 +73,7 @@ public class ProductSubscription {
 	 * Optional: emit an error to all subscribers
 	 */
 	public void error(Throwable t) {
+		logger.error("Emitting error to product subscription sink", t);
 		sink.tryEmitError(t);
 	}
 }

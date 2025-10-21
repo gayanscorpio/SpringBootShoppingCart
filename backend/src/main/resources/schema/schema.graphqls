@@ -15,6 +15,13 @@ input CreateProductInput {
   sku: String
 }
 
+input UpdateProductInput {
+  name: String
+  description: String
+  price: BigDecimal
+  sku: String
+}
+
 type CartItem {
   id: ID!
   product: Product!
@@ -32,11 +39,25 @@ input AddToCartInput {
   quantity: Int = 1
 }
 
-input UpdateProductInput {
-  name: String
-  description: String
-  price: BigDecimal
-  sku: String
+input OrderItemInput {
+  productName: String!
+  quantity: Int!
+  price: Float!
+}
+
+type OrderItem {
+  id: ID!
+  productName: String!
+  quantity: Int!
+  price: BigDecimal!
+}
+
+type Order {
+  id: ID!
+  userEmail: String!
+  totalAmount: Float!
+  paymentStatus: String!
+  items: [OrderItem!]!
 }
 
 type Query {
@@ -53,6 +74,12 @@ type Mutation {
   deleteProduct(id: ID!): Boolean
   addToCart(userId: String!, input: AddToCartInput!): Cart
   removeFromCart(userId: String!, productId: ID!): Cart
+  createPaymentIntent(amount: Int!): PaymentIntentResponse!
+  createOrder(userEmail: String!, totalAmount: Float!, items: [OrderItemInput!]!): Order
+}
+
+type PaymentIntentResponse {
+  clientSecret: String!
 }
 
 type Subscription {
