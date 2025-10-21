@@ -31,8 +31,13 @@ public class ProductDataFetcher {
 	@DgsQuery
 	public Mono<Product> productById(@InputArgument Long id) {
 		log.info("Fetching product by ID={}", id);
-		return service.findById(id).doOnNext(p -> log.info("Found product: id={}, name={}", p.getId(), p.getName()))
-				.doOnEmpty(() -> log.warn("Product with ID={} not found", id));
+		return service.findById(id).doOnSuccess(p -> {
+			if (p != null) {
+				log.info("Found product: id={}, name={}", p.getId(), p.getName());
+			} else {
+				log.warn("Product with ID={} not found", id);
+			}
+		});
 	}
 
 	@DgsMutation
@@ -53,6 +58,7 @@ public class ProductDataFetcher {
 	@DgsMutation
 	public Mono<Product> updateProduct(@InputArgument("id") Long id, @InputArgument("input") UpdateProductInput input) {
 		log.info("Updating product id={}", id);
+
 		return service.findById(id).flatMap(existing -> {
 			if (input.getName() != null)
 				existing.setName(input.getName());
@@ -62,11 +68,12 @@ public class ProductDataFetcher {
 				existing.setPrice(input.getPrice());
 			if (input.getSku() != null)
 				existing.setSku(input.getSku());
+
 			return service.save(existing).doOnSuccess(saved -> {
-				log.info("Product updated: id={}, name={}", saved.getId(), saved.getName());
+				log.info("✅ Product updated: id={}, name={}", saved.getId(), saved.getName());
 				productSubscription.publish(saved);
 			});
-		}).doOnEmpty(() -> log.warn("Product with id={} not found for update", id));
+		}).switchIfEmpty(Mono.fromRunnable(() -> log.warn("⚠️ Product with id={} not found for update", id)));
 	}
 
 	@DgsMutation
