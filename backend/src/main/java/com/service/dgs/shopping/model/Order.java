@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.util.List;
 
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Transient;
 import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
 
@@ -31,5 +32,6 @@ public class Order {
 	@Column("payment_status")
 	private String paymentStatus;
 
+	@Transient
 	private List<OrderItem> items;
 }
