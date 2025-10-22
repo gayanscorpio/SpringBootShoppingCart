@@ -21,7 +21,7 @@ public class PaymentDataFetcher {
 		log.info("Creating PaymentIntent for amount={}", amount);
 
 		// ✅ Load secret from environment variables in production
-		Stripe.apiKey = System.getenv().getOrDefault("STRIPE_API_KEY", "sk_test_XXXX");
+		Stripe.apiKey = System.getenv("STRIPE_SECRET_KEY");
 
 		try {
 			PaymentIntentCreateParams params = PaymentIntentCreateParams.builder().setAmount(Long.valueOf(amount))
