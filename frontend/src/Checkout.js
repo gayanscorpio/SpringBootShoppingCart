@@ -6,7 +6,7 @@ import { Elements } from "@stripe/react-stripe-js";
 import CheckoutForm from "./CheckoutForm";
 import { clearCart } from "./slices/cartSlice";
 
-const stripePromise = loadStripe("pk_test_XXXXXXXXXXXXXXXX"); // Your Stripe publishable key
+const stripePromise = loadStripe("pk_test_51SL0WCKVr55uZBWlWDYAsNFef10ZULkjdnuDHwmIChXjmVCHKaJU3rHnTZTOESepV841JQLXh13ql5BVo9qKw1wk00M2iJm8rl"); // Your Stripe publishable key
 
 function Checkout() {
     const dispatch = useDispatch();

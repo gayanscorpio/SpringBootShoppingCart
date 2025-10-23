@@ -1,10 +1,12 @@
-// CheckoutForm.js
 import React, { useState } from "react";
 import { CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
+import { useNavigate } from "react-router-dom";
 
 function CheckoutForm({ clientSecret, onSuccess }) {
     const stripe = useStripe();
     const elements = useElements();
+    const navigate = useNavigate();
+
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
@@ -15,8 +17,9 @@ function CheckoutForm({ clientSecret, onSuccess }) {
         setLoading(true);
         setError(null);
 
+        const card = elements.getElement(CardElement);
         const { paymentIntent, error } = await stripe.confirmCardPayment(clientSecret, {
-            payment_method: { card: elements.getElement(CardElement) },
+            payment_method: { card },
         });
 
         if (error) {
@@ -25,6 +28,7 @@ function CheckoutForm({ clientSecret, onSuccess }) {
         } else if (paymentIntent.status === "succeeded") {
             onSuccess(paymentIntent);
             setLoading(false);
+            navigate("/success"); // ✅ Redirect user
         }
     };
 

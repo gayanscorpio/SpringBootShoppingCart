@@ -7,6 +7,7 @@ import Cart from "./Cart";
 import CheckoutPage from "./Checkout";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css"; // ✅ import toastify CSS
+import Success from './payments/Success';
 
 function App() {
   return (
@@ -31,6 +32,7 @@ function App() {
           />
           <Route path="/cart" element={<Cart />} />
           <Route path="/checkout" element={<CheckoutPage />} />
+          <Route path="/success" element={<Success />} />
         </Routes>
 
         {/* ✅ Toast container — must be inside Router */}
