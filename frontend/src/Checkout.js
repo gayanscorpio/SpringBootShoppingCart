@@ -10,8 +10,8 @@ const stripePromise = loadStripe("pk_test_51SL0WCKVr55uZBWlWDYAsNFef10ZULkjdnuDH
 
 function Checkout() {
     const dispatch = useDispatch();
-    const items = useSelector((state) => state.carts.items);
-    const totalPrice = items.reduce(
+    const cartItems = useSelector((state) => state.carts.items);
+    const totalPrice = cartItems.reduce(
         (sum, item) => sum + (item.price || 0) * (item.quantity || 1),
         0
     );
@@ -47,7 +47,7 @@ function Checkout() {
         dispatch(clearCart());
     };
 
-    if (items.length === 0) return <p>Your cart is empty 🛒</p>;
+    if (cartItems.length === 0) return <p>Your cart is empty 🛒</p>;
     if (!clientSecret) return <p>Loading payment details...</p>;
 
     return (
@@ -56,7 +56,51 @@ function Checkout() {
             <p>Total: <strong>${totalPrice.toFixed(2)}</strong></p>
 
             <Elements stripe={stripePromise} options={{ clientSecret }}>
-                <CheckoutForm clientSecret={clientSecret} onSuccess={handleSuccess} />
+                <CheckoutForm clientSecret={clientSecret} onSuccess={async (paymentIntent) => {
+                    try {
+                        const userEmail = "customer@example.com"; // Replace with real user info if you have auth
+                        const totalAmount = totalPrice;
+                        const items = cartItems.map(item => ({
+                            productName: item.name,
+                            quantity: item.quantity,
+                            price: item.price,
+                        }));
+
+                        // GraphQL mutation request
+                        const response = await fetch("http://localhost:8080/graphql", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({
+                                query: `
+                      mutation CreateOrder($userEmail: String!, $totalAmount: Float!, $items: [OrderItemInput!]!) {
+                          createOrder(userEmail: $userEmail, totalAmount: $totalAmount, items: $items) {
+                              id
+                              userEmail
+                              totalAmount
+                              paymentStatus
+                              items {
+                                  productName
+                                  quantity
+                                  price
+                              }
+                          }
+                      }
+                  `,
+                                variables: { userEmail, totalAmount, items },
+                            }),
+                        });
+
+                        const result = await response.json();
+                        console.log("✅ Order saved to backend:", result.data.createOrder);
+
+                        alert("✅ Payment and Order saved successfully!");
+                        dispatch(clearCart());
+                        setClientSecret(null);
+                    } catch (err) {
+                        console.error("❌ Failed to create order:", err);
+                        alert("Payment succeeded but failed to record order!");
+                    }
+                }} />
             </Elements>
         </div>
     );
