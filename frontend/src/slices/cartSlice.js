@@ -23,16 +23,17 @@ const cartSlice = createSlice({
             //localStorage.setItem("cart", JSON.stringify(state.items));
         },
         removeItem: (state, action) => {
+            // state → is the current cart slice of state (e.g. { items: [...] })
+            //action → is the object { type: "carts/removeItem", payload: 123 }
+            //action.payload = the id of the product you clicked.
+            //keep the item only if its id is NOT equal to the id we’re removing.
             state.items = state.items.filter(item => item.id !== action.payload);
-            //localStorage.setItem("cart", JSON.stringify(state.items));
         },
         clearCart: (state) => {
             state.items = [];
-            //localStorage.setItem("cart", JSON.stringify(state.items));
         },
         setCart: (state, action) => {
             state.items = action.payload;
-            //localStorage.setItem("cart", JSON.stringify(state.items));
         }
     }
 });
