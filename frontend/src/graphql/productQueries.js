@@ -42,6 +42,8 @@ export const DELETE_PRODUCT = gql`
   }
 `;
 
+//If you had an “Add Product” form, it would run a mutation like:
+//That request goes to your Spring Boot backend, where your ProductDataFetcher handles it.
 export const PRODUCT_ADDED = gql`
   subscription {
     productAdded {
