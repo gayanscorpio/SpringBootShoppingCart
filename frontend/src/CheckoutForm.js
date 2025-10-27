@@ -28,7 +28,7 @@ function CheckoutForm({ clientSecret, onSuccess }) {
         } else if (paymentIntent.status === "succeeded") {
             onSuccess(paymentIntent);
             setLoading(false);
-            navigate("/success"); // ✅ Redirect user
+            navigate("/payments/Success"); // ✅ Redirect user
         }
     };
 
