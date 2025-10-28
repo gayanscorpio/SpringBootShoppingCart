@@ -1,15 +1,20 @@
 import React, { useState } from "react";
 
 function RegisterPage() {
+    const [step, setStep] = useState(1); // Step 1: register, Step 2: verify OTP
     const [form, setForm] = useState({
         username: "",
         password: "",
-        role: "customer", // default role
+        phone: "",
+        role: "Customer", // default role
     });
+    const [otp, setOtp] = useState("");
     const [message, setMessage] = useState("");
 
-    const handleSubmit = async (e) => {
+    // Step 1: Register user with phone
+    const handleRegister = async (e) => {
         e.preventDefault();
+        setMessage("");
 
         try {
             const response = await fetch("http://localhost:8082/graphql", {
@@ -17,25 +22,25 @@ function RegisterPage() {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     query: `
-            mutation RegisterUser($username: String!, $password: String!, $role: String!) {
-              register(username: $username, password: $password, role: $role)
+            mutation RegisterWithPhone($username: String!, $password: String!, $phone: String!) {
+              registerWithPhone(username: $username, password: $password, phone: $phone)
             }
           `,
                     variables: {
                         username: form.username,
                         password: form.password,
-                        role: form.role,
+                        phone: form.phone,
                     },
                 }),
             });
 
             const result = await response.json();
 
-            if (result.data?.register) {
-                setMessage("✅ Registered successfully! You can now log in.");
-                setForm({ username: "", password: "", role: "Student" });
+            if (result.data?.registerWithPhone) {
+                setMessage("✅ Registration successful! Check OTP (mocked in console).");
+                setStep(2); // Move to OTP verification
             } else {
-                setMessage("❌ Registration failed. Try a different username.");
+                setMessage("❌ Registration failed. Try a different username or phone.");
             }
         } catch (err) {
             console.error("Registration error:", err);
@@ -43,36 +48,110 @@ function RegisterPage() {
         }
     };
 
+    // Step 2: Verify OTP
+    const handleVerifyOtp = async (e) => {
+        e.preventDefault();
+        setMessage("");
+
+        try {
+            const response = await fetch("http://localhost:8082/graphql", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    query: `
+            mutation VerifyPhone($username: String!, $code: String!) {
+              verifyPhone(username: $username, code: $code) {
+                token
+                userId
+                role
+              }
+            }
+          `,
+                    variables: { username: form.username, code: otp },
+                }),
+            });
+
+            const result = await response.json();
+
+            if (result.data?.verifyPhone?.token) {
+                localStorage.setItem("token", result.data.verifyPhone.token);
+                localStorage.setItem("username", form.username);
+                setMessage("✅ Phone verified! You are now logged in.");
+                setStep(3);
+            } else {
+                setMessage("❌ OTP verification failed. Try again.");
+            }
+        } catch (err) {
+            console.error("OTP verification error:", err);
+            setMessage("❌ Server error during OTP verification.");
+        }
+    };
+
     return (
         <div style={{ maxWidth: 400, margin: "50px auto", textAlign: "center" }}>
-            <h2>🧾 Register</h2>
-            <form onSubmit={handleSubmit}>
-                <input
-                    placeholder="Username"
-                    value={form.username}
-                    onChange={(e) => setForm({ ...form, username: e.target.value })}
-                    required
-                />
-                <input
-                    type="password"
-                    placeholder="Password"
-                    value={form.password}
-                    onChange={(e) => setForm({ ...form, password: e.target.value })}
-                    required
-                />
-                <select
-                    value={form.role}
-                    onChange={(e) => setForm({ ...form, role: e.target.value })}
-                >
-                    <option value="Student">Student</option>
-                    <option value="Customer">Customer</option>
-                    <option value="Admin">Admin</option>
-                </select>
-                <button type="submit" style={{ marginTop: "10px" }}>
-                    Register
-                </button>
-            </form>
-            <p>{message}</p>
+            {step === 1 && (
+                <>
+                    <h2>🧾 Register</h2>
+                    <form onSubmit={handleRegister}>
+                        <input
+                            placeholder="Username"
+                            value={form.username}
+                            onChange={(e) => setForm({ ...form, username: e.target.value })}
+                            required
+                        />
+                        <input
+                            type="password"
+                            placeholder="Password"
+                            value={form.password}
+                            onChange={(e) => setForm({ ...form, password: e.target.value })}
+                            required
+                        />
+                        <input
+                            placeholder="Phone"
+                            value={form.phone}
+                            onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                            required
+                        />
+                        <select
+                            value={form.role}
+                            onChange={(e) => setForm({ ...form, role: e.target.value })}
+                        >
+                            <option value="Student">Student</option>
+                            <option value="Customer">Customer</option>
+                            <option value="Admin">Admin</option>
+                        </select>
+                        <button type="submit" style={{ marginTop: "10px" }}>
+                            Register
+                        </button>
+                    </form>
+                </>
+            )}
+
+            {step === 2 && (
+                <>
+                    <h2>📲 Verify OTP</h2>
+                    <form onSubmit={handleVerifyOtp}>
+                        <input
+                            placeholder="Enter OTP"
+                            value={otp}
+                            onChange={(e) => setOtp(e.target.value)}
+                            required
+                        />
+                        <button type="submit" style={{ marginTop: "10px" }}>
+                            Verify
+                        </button>
+                    </form>
+                </>
+            )}
+
+            {step === 3 && (
+                <>
+                    <h2>{message}</h2>
+                    <button onClick={() => (window.location.href = "/")}>🏠 Go to Home</button>
+                </>
+            )}
+
+            {message && step !== 3 && <p>{message}</p>}
         </div>
     );
 }
