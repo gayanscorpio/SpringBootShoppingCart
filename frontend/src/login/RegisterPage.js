@@ -76,6 +76,9 @@ function RegisterPage() {
             if (result.data?.verifyPhone?.token) {
                 localStorage.setItem("token", result.data.verifyPhone.token);
                 localStorage.setItem("username", form.username);
+
+                // Notify Navbar to update immediately
+                window.dispatchEvent(new Event("authChange"));
                 setMessage("✅ Phone verified! You are now logged in.");
                 setStep(3);
             } else {

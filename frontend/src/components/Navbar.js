@@ -1,29 +1,83 @@
 // src/components/Navbar.js
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 function Navbar() {
     const navigate = useNavigate();
-    const token = localStorage.getItem("token");
+    const [token, setToken] = useState(localStorage.getItem("token"));
+    const [username, setUsername] = useState(localStorage.getItem("username"));
+
+    // This allows Navbar to react to login/logout changes
+    useEffect(() => {
+        const checkToken = () => {
+            setToken(localStorage.getItem("token"));
+            setUsername(localStorage.getItem("username"));
+        };
+
+        // Listen for storage changes (other tabs, etc.)
+        window.addEventListener("storage", checkToken);
+
+        // Listen for custom event from login/register pages
+        window.addEventListener("authChange", checkToken);
+
+        return () => {
+            window.removeEventListener("storage", checkToken);
+            window.removeEventListener("authChange", checkToken);
+        };
+    }, []);
 
     const handleLogout = () => {
         localStorage.removeItem("token");
+        localStorage.removeItem("username");
+
+        // Notify other components Navbar should update
+        window.dispatchEvent(new Event("authChange"));
+        setToken(null);
         navigate("/");
     };
 
     return (
-        <nav style={{ padding: "10px", background: "#eee" }}>
-            <Link to="/">Products</Link> | <Link to="/cart">Cart</Link> |{" "}
-            {token ? (
-                <>
-                    <Link to="/checkout">Checkout</Link> |{" "}
-                    <button onClick={handleLogout}>Logout</button>
-                </>
-            ) : (
-                <>
-                    <Link to="/login">Login</Link> | <Link to="/register">Register</Link>
-                </>
-            )}
+        <nav
+            style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                padding: "10px 20px",
+                background: "#f4f4f4",
+                borderBottom: "1px solid #ddd",
+            }}
+        >
+            <div style={{ display: "flex", gap: "15px" }}>
+                <Link to="/">Products</Link>
+                <Link to="/cart">Cart</Link>
+                {token && <Link to="/checkout">Checkout</Link>}
+            </div>
+
+            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                {token ? (
+                    <>
+                        <span>👋 {username}</span>
+                        <button
+                            onClick={handleLogout}
+                            style={{
+                                padding: "5px 10px",
+                                background: "#e74c3c",
+                                color: "white",
+                                border: "none",
+                                borderRadius: "5px",
+                                cursor: "pointer",
+                            }}
+                        >
+                            Logout
+                        </button>
+                    </>
+                ) : (
+                    <>
+                        <Link to="/login">Login</Link>
+                        <Link to="/register">Register</Link>
+                    </>
+                )}
+            </div>
         </nav>
     );
 }
