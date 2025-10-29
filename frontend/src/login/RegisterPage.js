@@ -6,12 +6,11 @@ function RegisterPage() {
         username: "",
         password: "",
         phone: "",
-        role: "Customer", // default role
     });
     const [otp, setOtp] = useState("");
     const [message, setMessage] = useState("");
 
-    // Step 1: Register user with phone
+    // Step 1: Register user with phone (auto-assign role = "Customer")
     const handleRegister = async (e) => {
         e.preventDefault();
         setMessage("");
@@ -22,14 +21,25 @@ function RegisterPage() {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     query: `
-            mutation RegisterWithPhone($username: String!, $password: String!, $phone: String!) {
-              registerWithPhone(username: $username, password: $password, phone: $phone)
-            }
-          `,
+                        mutation RegisterWithPhone(
+                          $username: String!, 
+                          $password: String!, 
+                          $phone: String!, 
+                          $role: String!
+                        ) {
+                          registerWithPhone(
+                            username: $username, 
+                            password: $password, 
+                            phone: $phone,
+                            role: $role
+                          )
+                        }
+                    `,
                     variables: {
                         username: form.username,
                         password: form.password,
                         phone: form.phone,
+                        role: "Customer", // hardcoded role
                     },
                 }),
             });
@@ -59,14 +69,14 @@ function RegisterPage() {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     query: `
-            mutation VerifyPhone($username: String!, $code: String!) {
-              verifyPhone(username: $username, code: $code) {
-                token
-                userId
-                role
-              }
-            }
-          `,
+                        mutation VerifyPhone($username: String!, $code: String!) {
+                            verifyPhone(username: $username, code: $code) {
+                                token
+                                userId
+                                role
+                            }
+                        }
+                    `,
                     variables: { username: form.username, code: otp },
                 }),
             });
@@ -76,6 +86,7 @@ function RegisterPage() {
             if (result.data?.verifyPhone?.token) {
                 localStorage.setItem("token", result.data.verifyPhone.token);
                 localStorage.setItem("username", form.username);
+                localStorage.setItem("role", result.data.verifyPhone.role);
 
                 // Notify Navbar to update immediately
                 window.dispatchEvent(new Event("authChange"));
@@ -115,14 +126,7 @@ function RegisterPage() {
                             onChange={(e) => setForm({ ...form, phone: e.target.value })}
                             required
                         />
-                        <select
-                            value={form.role}
-                            onChange={(e) => setForm({ ...form, role: e.target.value })}
-                        >
-                            <option value="Student">Student</option>
-                            <option value="Customer">Customer</option>
-                            <option value="Admin">Admin</option>
-                        </select>
+
                         <button type="submit" style={{ marginTop: "10px" }}>
                             Register
                         </button>
