@@ -49,7 +49,7 @@ function LoginPage() {
             localStorage.setItem("token", loginData.token);
             localStorage.setItem("username", form.username);
             localStorage.setItem("userId", loginData.userId);
-
+            localStorage.setItem("role", result.data.login.role);
             // Notify Navbar to update immediately
             window.dispatchEvent(new Event("authChange"));
             navigate("/");
@@ -91,6 +91,7 @@ function LoginPage() {
                 localStorage.setItem("token", data.token);
                 localStorage.setItem("username", form.username);
                 localStorage.setItem("userId", data.userId);
+                localStorage.setItem("role", data.role);
                 setMessage("✅ Phone verified! You are now logged in.");
                 setStep(3);
             } else {

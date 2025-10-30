@@ -21,12 +21,14 @@ function ProtectedRoute({ children }) {
 function App() {
   const [token, setToken] = useState(localStorage.getItem("token"));
   const [username, setUsername] = useState(localStorage.getItem("username"));
+  const [role, setRole] = useState(localStorage.getItem("role"));
 
-  // 👂 Listen for login/logout changes from anywhere in the app
+  // 👂 Listen for login/logout changes globally
   useEffect(() => {
     const handleAuthChange = () => {
       setToken(localStorage.getItem("token"));
       setUsername(localStorage.getItem("username"));
+      setRole(localStorage.getItem("role"));
     };
     window.addEventListener("authChange", handleAuthChange);
     return () => window.removeEventListener("authChange", handleAuthChange);
@@ -35,6 +37,7 @@ function App() {
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("username");
+    localStorage.removeItem("role");
     window.dispatchEvent(new Event("authChange"));
   };
 
@@ -46,7 +49,7 @@ function App() {
           marginBottom: "20px",
           display: "flex",
           alignItems: "center",
-          justifyContent: "space-between", // keeps left and right sides apart
+          justifyContent: "space-between",
           padding: "12px 40px",
           background: "#f4f4f4",
           borderBottom: "1px solid #ddd",
@@ -63,7 +66,26 @@ function App() {
         <div style={{ display: "flex", gap: "15px", alignItems: "center", fontSize: "18px" }}>
           {token ? (
             <>
-              <span>👋 {username}</span>
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "flex-end",
+                  marginRight: "10px",
+                }}
+              >
+                <span>👋 <strong>{username}</strong></span>
+                <small
+                  style={{
+                    color: role === "Admin" ? "#d35400" : "#555",
+                    fontStyle: "italic",
+                    fontSize: "14px",
+                  }}
+                >
+                  ({role})
+                </small>
+              </div>
+
               <button
                 onClick={handleLogout}
                 style={{
@@ -89,16 +111,40 @@ function App() {
 
       {/* ✅ Routes */}
       <Routes>
+        {/* 🏠 Home Page — shows content only when logged in */}
         <Route
           path="/"
           element={
-            <>
-              <h1>🛍️ Shopping App</h1>
-              <AddProduct />
-              <ProductList />
-            </>
+            token ? (
+              <>
+                <h1>🛍️ Shopping App</h1>
+                {role === "Admin" && <AddProduct />}
+                <ProductList />
+              </>
+            ) : (
+              <div style={{ textAlign: "center", marginTop: "50px" }}>
+                <h1>🛒 Welcome to Our Shopping App</h1>
+                <p>Discover great products! Please log in to start shopping.</p>
+                <Link
+                  to="/login"
+                  style={{
+                    padding: "10px 20px",
+                    background: "#3498db",
+                    color: "white",
+                    textDecoration: "none",
+                    borderRadius: "8px",
+                    display: "inline-block",
+                    marginTop: "20px",
+                  }}
+                >
+                  🔑 Login to Continue
+                </Link>
+              </div>
+            )
           }
         />
+
+        {/* Protected Routes */}
         <Route
           path="/cart"
           element={
@@ -115,6 +161,8 @@ function App() {
             </ProtectedRoute>
           }
         />
+
+        {/* Auth & Payment */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/payments/Success" element={<Success />} />

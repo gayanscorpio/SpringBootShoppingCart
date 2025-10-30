@@ -21,32 +21,48 @@ function Checkout() {
     );
 
     const [clientSecret, setClientSecret] = useState(null);
+    // 🧠 Get token from localStorage
+    const token = localStorage.getItem("token");
 
     // Create Stripe PaymentIntent
     useEffect(() => {
         if (totalPrice === 0) return;
 
         const createPaymentIntent = async () => {
-            const response = await fetch("http://localhost:8080/graphql", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    query: `
-            mutation {
-              createPaymentIntent(amount: ${Math.round(totalPrice * 100)}) {
-                clientSecret
-              }
-            }
-          `,
-                }),
-            });
+            try {
+                const response = await fetch("http://localhost:8080/graphql", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        ...(token && { Authorization: `Bearer ${token}` }),
+                    },
+                    body: JSON.stringify({
+                        query: `
+                     mutation {
+                      createPaymentIntent(amount: ${Math.round(totalPrice * 100)}) {
+                        clientSecret
+                        }
+                    }`,
+                    }),
+                });
 
-            const result = await response.json();
-            setClientSecret(result.data?.createPaymentIntent?.clientSecret);
+                if (!response.ok) {
+                    throw new Error(`Server returned ${response.status}`);
+                }
+                const result = await response.json();
+                if (result.errors) {
+                    console.error("GraphQL errors:", result.errors);
+                    throw new Error(result.errors[0]?.message || "GraphQL error");
+                }
+                setClientSecret(result.data?.createPaymentIntent?.clientSecret);
+            } catch (err) {
+                console.error("❌ Failed to create payment intent:", err);
+                alert("Failed to start checkout — please log in again.");
+            }
         };
 
         createPaymentIntent();
-    }, [totalPrice]);
+    }, [totalPrice, token]);
 
     // Handle successful payment
     const handleSuccess = async (paymentIntent) => {
@@ -61,7 +77,10 @@ function Checkout() {
             // GraphQL createOrder mutation
             const response = await fetch("http://localhost:8080/graphql", {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: {
+                    "Content-Type": "application/json",
+                    ...(token && { Authorization: `Bearer ${token}` }),
+                },
                 body: JSON.stringify({
                     query: `
             mutation CreateOrder($username: String!, $totalAmount: Float!, $items: [OrderItemInput!]!) {

@@ -6,12 +6,14 @@ function Navbar() {
     const navigate = useNavigate();
     const [token, setToken] = useState(localStorage.getItem("token"));
     const [username, setUsername] = useState(localStorage.getItem("username"));
+    const [role, setRole] = useState(localStorage.getItem("role"));
 
     // This allows Navbar to react to login/logout changes
     useEffect(() => {
         const checkToken = () => {
             setToken(localStorage.getItem("token"));
             setUsername(localStorage.getItem("username"));
+            setRole(localStorage.getItem("role")); // ✅ Update role as well
         };
 
         // Listen for storage changes (other tabs, etc.)
@@ -29,10 +31,13 @@ function Navbar() {
     const handleLogout = () => {
         localStorage.removeItem("token");
         localStorage.removeItem("username");
+        localStorage.removeItem("role"); // ✅ Clear role on logout
 
         // Notify other components Navbar should update
         window.dispatchEvent(new Event("authChange"));
         setToken(null);
+        setUsername(null);
+        setRole(null);
         navigate("/");
     };
 
@@ -53,10 +58,18 @@ function Navbar() {
                 {token && <Link to="/checkout">Checkout</Link>}
             </div>
 
+            {/* Right user info */}
             <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                 {token ? (
                     <>
-                        <span>👋 {username}</span>
+                        <div style={{ textAlign: "right" }}>
+                            <span>👋 <strong>{username}</strong></span><br />
+                            {role && (
+                                <small style={{ fontStyle: "italic", color: "#666" }}>
+                                    ({role})
+                                </small>
+                            )}
+                        </div>
                         <button
                             onClick={handleLogout}
                             style={{
