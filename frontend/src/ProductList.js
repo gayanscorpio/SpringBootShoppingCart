@@ -26,7 +26,7 @@ import { GET_PRODUCTS, PRODUCT_ADDED, DELETE_PRODUCT } from "./graphql/productQu
 import { setProducts, deleteProduct, addProducts } from "./slices/ProductSlice";
 
 //Redux action to add a selected product into cart state.
-import { addItem } from "./slices/cartSlice"; // ✅ Add cart slice import
+import { addItem, setCart } from "./slices/cartSlice"; // ✅ Add cart slice import
 
 //➡ UI component responsible for rendering a single product card/item
 //  (with “Add to Cart” and “Delete” buttons).
@@ -37,6 +37,8 @@ function ProductList() {
     const navigate = useNavigate(); // ✅ hook for navigation
     //➡ Reads products array from Redux store.
     const products = useSelector((state) => state.products?.items || []);
+
+    const username = localStorage.getItem("username"); // ✅ identify user
 
     // ✅ Initial fetch - Fetching Products from backend
     //loading: true while fetching
@@ -63,6 +65,14 @@ function ProductList() {
         if (subData?.productAdded) dispatch(addProducts(subData.productAdded));
     }, [subData, dispatch]);
 
+    // ✅ Load per-user cart from localStorage on mount
+    useEffect(() => {
+        if (username) {
+            const savedCart = JSON.parse(localStorage.getItem(`cart_${username}`) || "[]");
+            dispatch(setCart(savedCart));
+        }
+    }, [dispatch, username]);
+
     // ✅ Delete a product - When you call deleteProductMutation({ variables: { id } }), it will:
     //Run the DELETE_PRODUCT mutation.
     //Then refetch products list from backend (ensures UI sync).
@@ -76,6 +86,14 @@ function ProductList() {
     const handleAddToCart = (product) => {
         dispatch(addItem(product)); // add to cart state
         navigate("/cart"); // redirect to cart page
+
+        // ---- Track frequent interactions ----
+        if (username) {
+            const key = `productStats_${username}`;
+            const stats = JSON.parse(localStorage.getItem(key) || "{}");
+            stats[product.id] = (stats[product.id] || 0) + 1;
+            localStorage.setItem(key, JSON.stringify(stats));
+        }
     };
 
     // ✅ Render section

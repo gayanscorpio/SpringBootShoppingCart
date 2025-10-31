@@ -21,6 +21,11 @@ const cartSlice = createSlice({
                 state.items.push({ ...action.payload, quantity: 1 });
             }
             //localStorage.setItem("cart", JSON.stringify(state.items));
+            // ✅ Save per-user cart
+            const username = localStorage.getItem("username");
+            if (username) {
+                localStorage.setItem(`cart_${username}`, JSON.stringify(state.items));
+            }
         },
         removeItem: (state, action) => {
             // state → is the current cart slice of state (e.g. { items: [...] })
@@ -28,9 +33,24 @@ const cartSlice = createSlice({
             //action.payload = the id of the product you clicked.
             //keep the item only if its id is NOT equal to the id we’re removing.
             state.items = state.items.filter(item => item.id !== action.payload);
+
+            // Now update localStorage so it stays in sync for this logged-in user
+            //Each logged-in user has their own cart saved separately.
+            //When one user removes something, 
+            //we must update their own saved cart, not the global or shared one.
+            const username = localStorage.getItem("username");
+            if (username) {
+                localStorage.setItem(`cart_${username}`, JSON.stringify(state.items));
+            }
         },
         clearCart: (state) => {
-            state.items = [];
+            state.items = []; //✅ This clears the Redux store,
+
+            // Clear localStorage for this logged-in user
+            const username = localStorage.getItem("username");
+            if (username) {
+                localStorage.removeItem(`cart_${username}`);
+            }
         },
         setCart: (state, action) => {
             state.items = action.payload;
