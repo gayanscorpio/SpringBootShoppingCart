@@ -4,6 +4,7 @@ import { persistStore, persistReducer, FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, 
 import cartReducer from "./slices/cartSlice";
 import productReducer from './slices/ProductSlice';
 import storage from "redux-persist/lib/storage"; // defaults to localStorage
+import wishlistReducer from "./slices/wishlistSlice";
 
 // Persist cart config
 const cartPersistConfig = {
@@ -13,7 +14,8 @@ const cartPersistConfig = {
 
 const rootReducer = combineReducers({
     carts: persistReducer(cartPersistConfig, cartReducer), // persisted
-    products: productReducer // normal (not persisted)
+    products: productReducer, // normal (not persisted)
+    wishlist: wishlistReducer
 });
 
 // Configure store

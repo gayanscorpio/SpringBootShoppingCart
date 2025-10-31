@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useDispatch } from "react-redux";
 import { BrowserRouter as Router, Routes, Route, Link, Navigate } from "react-router-dom";
 import AddProduct from "./AddProduct";
 import ProductList from "./ProductList";
@@ -9,6 +10,8 @@ import Register from "./login/RegisterPage";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Success from "./payments/Success";
+import Wishlist from './Wishlist';
+import { setWishlist } from "./slices/wishlistSlice";
 
 function ProtectedRoute({ children }) {
   const token = localStorage.getItem("token");
@@ -22,6 +25,14 @@ function App() {
   const [token, setToken] = useState(localStorage.getItem("token"));
   const [username, setUsername] = useState(localStorage.getItem("username"));
   const [role, setRole] = useState(localStorage.getItem("role"));
+
+  const dispatch = useDispatch();
+  if (username) {
+    const savedWishlist = localStorage.getItem(`wishlist_${username}`);
+    if (savedWishlist) {
+      dispatch(setWishlist(JSON.parse(savedWishlist)));
+    }
+  }
 
   // 👂 Listen for login/logout changes globally
   useEffect(() => {
@@ -59,6 +70,7 @@ function App() {
         <div style={{ display: "flex", gap: "20px", fontSize: "18px" }}>
           <Link to="/">🏠 Home</Link>
           <Link to="/cart">🛒 Cart</Link>
+          <Link to="/wishlist">💾 Wishlist</Link>
           <Link to="/checkout">💳 Checkout</Link>
         </div>
 
@@ -158,6 +170,14 @@ function App() {
           element={
             <ProtectedRoute>
               <CheckoutPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/wishlist"
+          element={
+            <ProtectedRoute>
+              <Wishlist />
             </ProtectedRoute>
           }
         />

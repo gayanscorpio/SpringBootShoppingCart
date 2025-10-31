@@ -3,6 +3,7 @@ import { useDispatch } from "react-redux";
 import { addItem } from "./slices/cartSlice";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+import { addToWishlist } from "./slices/wishlistSlice";
 
 function ProductItem({ product, onDelete }) {
     const dispatch = useDispatch();
@@ -22,6 +23,15 @@ function ProductItem({ product, onDelete }) {
         setTimeout(() => {
             navigate("/cart");
         }, 1000);
+    };
+
+    // 💾 Save for Later (wishlist)
+    const onSaveForLater = () => {
+        dispatch(addToWishlist(product));
+        toast.info(`${product.name} saved for later 💾`, {
+            position: "top-right",
+            autoClose: 1000,
+        });
     };
 
     return (
@@ -52,6 +62,22 @@ function ProductItem({ product, onDelete }) {
                     }}
                 >
                     🛒 Add to Cart
+                </button>
+
+                {/* ✅ Save for Later */}
+                <button
+                    onClick={() => onSaveForLater(product)}
+                    style={{
+                        padding: "6px 12px",
+                        background: "#f39c12",
+                        color: "white",
+                        border: "none",
+                        borderRadius: "6px",
+                        cursor: "pointer",
+                        marginLeft: "8px",
+                    }}
+                >
+                    💾 Save for Later
                 </button>
 
                 {onDelete && (

@@ -32,6 +32,9 @@ import { addItem, setCart } from "./slices/cartSlice"; // ✅ Add cart slice imp
 //  (with “Add to Cart” and “Delete” buttons).
 import ProductItem from "./ProductItem";
 
+// addToWishlist
+import { addToWishlist } from "./slices/wishlistSlice";
+
 function ProductList() {
     const dispatch = useDispatch(); //dispatch → to update Redux store
     const navigate = useNavigate(); // ✅ hook for navigation
@@ -96,6 +99,12 @@ function ProductList() {
         }
     };
 
+    //addToWishlist - product
+    const handleSaveForLater = (product) => {
+        dispatch(addToWishlist(product));
+        alert(`${product.name} saved for later!`);
+    };
+
     // ✅ Render section
     if (loading) return <p>Loading...</p>;
     if (error) return <p>Error! {error.message}</p>;
@@ -110,6 +119,7 @@ function ProductList() {
                         product={{ ...p, price: Number(p.price) }}
                         onDelete={handleDelete}
                         onAddToCart={handleAddToCart} // ✅ Pass this down
+                        onSaveForLater={handleSaveForLater} // Save for later
                     />
                 ))}
             </ul>

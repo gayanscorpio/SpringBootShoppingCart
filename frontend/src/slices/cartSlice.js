@@ -54,6 +54,10 @@ const cartSlice = createSlice({
         },
         setCart: (state, action) => {
             state.items = action.payload;
+            const username = localStorage.getItem("username");
+            if (username) {
+                localStorage.setItem(`cart_${username}`, JSON.stringify(state.items));
+            }
         }
     }
 });
