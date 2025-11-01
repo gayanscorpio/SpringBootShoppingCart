@@ -131,7 +131,7 @@ function App() {
               <>
                 <h1>🛍️ Shopping App</h1>
                 {role === "Admin" && <AddProduct />}
-                <ProductList />
+                <ProductList role={role} />
               </>
             ) : (
               <div style={{ textAlign: "center", marginTop: "50px" }}>

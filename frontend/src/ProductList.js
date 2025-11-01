@@ -35,7 +35,7 @@ import ProductItem from "./ProductItem";
 // addToWishlist
 import { addToWishlist } from "./slices/wishlistSlice";
 
-function ProductList() {
+function ProductList({ role }) {
     const dispatch = useDispatch(); //dispatch → to update Redux store
     const navigate = useNavigate(); // ✅ hook for navigation
     //➡ Reads products array from Redux store.
@@ -117,7 +117,8 @@ function ProductList() {
                     <ProductItem
                         key={p.id}
                         product={{ ...p, price: Number(p.price) }}
-                        onDelete={handleDelete}
+                        // ✅ Only pass onDelete if Admin
+                        onDelete={role === "Admin" ? handleDelete : null}
                         onAddToCart={handleAddToCart} // ✅ Pass this down
                         onSaveForLater={handleSaveForLater} // Save for later
                     />
