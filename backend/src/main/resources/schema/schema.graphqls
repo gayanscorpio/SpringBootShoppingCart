@@ -6,6 +6,7 @@ type Product {
   description: String
   price: BigDecimal!
   sku: String
+  isAdult: Boolean! 
 }
 
 input CreateProductInput {
