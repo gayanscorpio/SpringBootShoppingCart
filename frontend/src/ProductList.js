@@ -105,6 +105,8 @@ function ProductList({ role }) {
         alert(`${product.name} saved for later!`);
     };
 
+    const age = parseInt(localStorage.getItem("age") || "0", 10);
+
     // ✅ Render section
     if (loading) return <p>Loading...</p>;
     if (error) return <p>Error! {error.message}</p>;
@@ -119,6 +121,9 @@ function ProductList({ role }) {
                         product={{ ...p, price: Number(p.price) }}
                         // ✅ Only pass onDelete if Admin
                         onDelete={role === "Admin" ? handleDelete : null}
+                        //to restrict the product display based on user's age
+                        isAdultRestricted={p.isAdult}
+                        userAge={age}
                         onAddToCart={handleAddToCart} // ✅ Pass this down
                         onSaveForLater={handleSaveForLater} // Save for later
                     />

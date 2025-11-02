@@ -6,6 +6,7 @@ function RegisterPage() {
         username: "",
         password: "",
         phone: "",
+        dob: "",
     });
     const [otp, setOtp] = useState("");
     const [message, setMessage] = useState("");
@@ -21,17 +22,19 @@ function RegisterPage() {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     query: `
-                        mutation RegisterWithPhone(
+                        mutation RegisterWithDob(
                           $username: String!, 
                           $password: String!, 
                           $phone: String!, 
-                          $role: String!
+                          $role: String!,
+                          $dob: String!
                         ) {
-                          registerWithPhone(
+                          registerWithDob(
                             username: $username, 
                             password: $password, 
                             phone: $phone,
-                            role: $role
+                            role: $role,
+                            dob: $dob
                           )
                         }
                     `,
@@ -40,13 +43,14 @@ function RegisterPage() {
                         password: form.password,
                         phone: form.phone,
                         role: "Customer", // hardcoded role
+                        dob: form.dob, // 🆕 pass DOB
                     },
                 }),
             });
 
             const result = await response.json();
 
-            if (result.data?.registerWithPhone) {
+            if (result.data?.registerWithDob) {
                 setMessage("✅ Registration successful! Check OTP (mocked in console).");
                 setStep(2); // Move to OTP verification
             } else {
@@ -124,6 +128,12 @@ function RegisterPage() {
                             placeholder="Phone"
                             value={form.phone}
                             onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                            required
+                        />
+                        <input //This will allow users to pick their birth date (in ISO YYYY-MM-DD format).
+                            type="date"
+                            value={form.dob}
+                            onChange={(e) => setForm({ ...form, dob: e.target.value })}
                             required
                         />
 

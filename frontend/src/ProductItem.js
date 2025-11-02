@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { addToWishlist } from "./slices/wishlistSlice";
 
-function ProductItem({ product, onDelete }) {
+function ProductItem({ product, isAdultRestricted, userAge, onDelete }) {
     const dispatch = useDispatch();
     const navigate = useNavigate();
 
@@ -33,6 +33,7 @@ function ProductItem({ product, onDelete }) {
             autoClose: 1000,
         });
     };
+    const restricted = isAdultRestricted && userAge < 18;
 
     return (
         <li
@@ -42,59 +43,71 @@ function ProductItem({ product, onDelete }) {
                 alignItems: "center",
                 padding: "10px",
                 borderBottom: "1px solid #ddd",
+                opacity: restricted ? 0.6 : 1,
             }}
         >
             <div>
-                <strong>{product.name}</strong> — ${Number(product.price).toFixed(2)}
+                <strong>
+                    {restricted ? "+18 Product (Restricted)" : product.name}
+                </strong>
+                {restricted ? null : <> — ${Number(product.price).toFixed(2)}</>}
             </div>
 
             <div>
-                <button
-                    onClick={handleAddToCart}
-                    style={{
-                        marginLeft: "10px",
-                        background: "green",
-                        color: "white",
-                        border: "none",
-                        padding: "6px 10px",
-                        borderRadius: "5px",
-                        cursor: "pointer",
-                    }}
-                >
-                    🛒 Add to Cart
-                </button>
+                {!restricted ? (
+                    <>
+                        <button
+                            onClick={() => handleAddToCart(product)}
+                            style={{
+                                marginLeft: "10px",
+                                background: "green",
+                                color: "white",
+                                border: "none",
+                                padding: "6px 10px",
+                                borderRadius: "5px",
+                                cursor: "pointer",
+                            }}
+                        >
+                            🛒 Add to Cart
+                        </button>
 
-                {/* ✅ Save for Later */}
-                <button
-                    onClick={() => onSaveForLater(product)}
-                    style={{
-                        padding: "6px 12px",
-                        background: "#f39c12",
-                        color: "white",
-                        border: "none",
-                        borderRadius: "6px",
-                        cursor: "pointer",
-                        marginLeft: "8px",
-                    }}
-                >
-                    💾 Save for Later
-                </button>
+                        {/* ✅ Save for Later */}
+                        <button
+                            onClick={() => onSaveForLater(product)}
+                            style={{
+                                padding: "6px 12px",
+                                background: "#f39c12",
+                                color: "white",
+                                border: "none",
+                                borderRadius: "6px",
+                                cursor: "pointer",
+                                marginLeft: "8px",
+                            }}
+                        >
+                            💾 Save for Later
+                        </button>
 
-                {onDelete && (
-                    <button
-                        onClick={() => onDelete(product.id)}
-                        style={{
-                            marginLeft: "10px",
-                            background: "red",
-                            color: "white",
-                            border: "none",
-                            padding: "6px 10px",
-                            borderRadius: "5px",
-                            cursor: "pointer",
-                        }}
-                    >
-                        ❌ Delete
-                    </button>
+                        {onDelete && (
+                            <button
+                                onClick={() => onDelete(product.id)}
+                                style={{
+                                    marginLeft: "10px",
+                                    background: "red",
+                                    color: "white",
+                                    border: "none",
+                                    padding: "6px 10px",
+                                    borderRadius: "5px",
+                                    cursor: "pointer",
+                                }}
+                            >
+                                ❌ Delete
+                            </button>
+                        )}
+                    </>
+                ) : (
+                    <span style={{ color: "red", fontWeight: "bold" }}>
+                        🔞 Restricted
+                    </span>
                 )}
             </div>
         </li>

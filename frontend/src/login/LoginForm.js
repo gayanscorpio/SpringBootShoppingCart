@@ -24,6 +24,7 @@ function LoginPage() {
                 token
                 userId
                 role
+                age
               }
             }
           `,
@@ -50,6 +51,10 @@ function LoginPage() {
             localStorage.setItem("username", form.username);
             localStorage.setItem("userId", loginData.userId);
             localStorage.setItem("role", result.data.login.role);
+            localStorage.setItem("age", loginData.age);
+
+            console.log('loginData.age :', loginData.age)
+
             // Notify Navbar to update immediately
             window.dispatchEvent(new Event("authChange"));
             navigate("/");
