@@ -30,4 +30,10 @@ public class Product {
 
 	@Column("sku")
 	private String sku;
+
+	/**
+	 * This is a reference type (an object).
+	 */
+	@Column("is_adult")
+	private Boolean isAdult; // Wrapper type - Boolean : this can be Null also than "true", "false"
 }

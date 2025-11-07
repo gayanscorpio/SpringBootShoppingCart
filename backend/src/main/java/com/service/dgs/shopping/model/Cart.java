@@ -32,13 +32,13 @@ public class Cart {
 		} else {
 			// Step 1: convert String → Long for entity
 			Long prodId = Long.parseLong(productId);
-			Product productEntity = new Product(prodId, "Dummy", "", BigDecimal.ZERO, "SKU");
+			Product productEntity = new Product(prodId, "Dummy", "", BigDecimal.ZERO, "SKU", false);
 
 			// Step 2: convert entity → DTO
 			com.service.dgs.shopping.dto.types.Product gqlProduct = com.service.dgs.shopping.dto.types.Product
 					.newBuilder().id(productId).name(productEntity.getName())
 					.description(productEntity.getDescription()).price(productEntity.getPrice())
-					.sku(productEntity.getSku()).build();
+					.sku(productEntity.getSku()).isAdult(productEntity.getIsAdult()).build();
 
 			// Step 3: add CartItem
 			items.add(new CartItem(UUID.randomUUID().toString(), gqlProduct, qty));

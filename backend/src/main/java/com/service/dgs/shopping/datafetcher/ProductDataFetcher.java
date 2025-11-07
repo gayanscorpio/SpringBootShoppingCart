@@ -47,6 +47,7 @@ public class ProductDataFetcher {
 		p.setName(input.getName());
 		p.setDescription(input.getDescription());
 		p.setPrice(input.getPrice());
+		p.setIsAdult(input.getIsAdult() != null ? input.getIsAdult() : false);
 		p.setSku(input.getSku());
 
 		return service.save(p).doOnSuccess(saved -> {
