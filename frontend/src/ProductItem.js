@@ -6,10 +6,22 @@ import { toast } from "react-toastify";
 import { addToWishlist } from "./slices/wishlistSlice";
 
 function ProductItem({ product, isAdultRestricted, userAge, onDelete }) {
+    console.log("Products:", product);
+
     const dispatch = useDispatch();
     const navigate = useNavigate();
+    const restricted = isAdultRestricted && userAge < 18;
 
     const handleAddToCart = () => {
+        //check if restricted product for that user
+        if (restricted) {
+            toast.error("You must be 18+ to buy this product 🔞", {
+                position: "top-right",
+                autoClose: 1500,
+            });
+            return;
+        }
+
         // ✅ Add product to Redux cart
         dispatch(addItem({ ...product, quantity: 1 }));
 
@@ -26,14 +38,22 @@ function ProductItem({ product, isAdultRestricted, userAge, onDelete }) {
     };
 
     // 💾 Save for Later (wishlist)
-    const onSaveForLater = () => {
+    const handleSaveForLater = () => {
+        if (restricted) {
+            toast.warn("Restricted product cannot be saved 💾", {
+                position: "top-right",
+                autoClose: 1500,
+            });
+            return;
+        }
+
         dispatch(addToWishlist(product));
         toast.info(`${product.name} saved for later 💾`, {
             position: "top-right",
             autoClose: 1000,
         });
     };
-    const restricted = isAdultRestricted && userAge < 18;
+    console.log("Product:", product.name, "User age:", userAge, "Restricted:", restricted);
 
     return (
         <li
@@ -50,7 +70,7 @@ function ProductItem({ product, isAdultRestricted, userAge, onDelete }) {
                 <strong>
                     {restricted ? "+18 Product (Restricted)" : product.name}
                 </strong>
-                {restricted ? null : <> — ${Number(product.price).toFixed(2)}</>}
+                {!restricted && <> — ${Number(product.price).toFixed(2)}</>}
             </div>
 
             <div>
@@ -60,29 +80,31 @@ function ProductItem({ product, isAdultRestricted, userAge, onDelete }) {
                             onClick={() => handleAddToCart(product)}
                             style={{
                                 marginLeft: "10px",
-                                background: "green",
+                                background: restricted ? "gray" : "green",
                                 color: "white",
                                 border: "none",
                                 padding: "6px 10px",
                                 borderRadius: "5px",
-                                cursor: "pointer",
+                                cursor: restricted ? "not-allowed" : "pointer",
                             }}
+                            disabled={restricted}
                         >
                             🛒 Add to Cart
                         </button>
 
                         {/* ✅ Save for Later */}
                         <button
-                            onClick={() => onSaveForLater(product)}
+                            onClick={handleSaveForLater}
                             style={{
                                 padding: "6px 12px",
-                                background: "#f39c12",
+                                background: restricted ? "gray" : "#f39c12",
                                 color: "white",
                                 border: "none",
                                 borderRadius: "6px",
-                                cursor: "pointer",
+                                cursor: restricted ? "not-allowed" : "pointer",
                                 marginLeft: "8px",
                             }}
+                            disabled={restricted}
                         >
                             💾 Save for Later
                         </button>

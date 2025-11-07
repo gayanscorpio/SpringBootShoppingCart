@@ -8,6 +8,7 @@ export const GET_PRODUCTS = gql`
       description
       price
       sku
+      isAdult
     }
   }
 `;
@@ -20,6 +21,7 @@ export const CREATE_PRODUCT = gql`
       description
       price
       sku
+      isAdult
     }
   }
 `;
@@ -32,6 +34,7 @@ export const UPDATE_PRODUCT = gql`
       description
       price
       sku
+      isAdult
     }
   }
 `;
@@ -52,6 +55,7 @@ export const PRODUCT_ADDED = gql`
       description
       price
       sku
+      isAdult
     }
   }
 `;
