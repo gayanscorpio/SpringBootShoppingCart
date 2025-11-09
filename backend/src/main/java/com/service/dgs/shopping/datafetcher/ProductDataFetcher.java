@@ -50,6 +50,9 @@ public class ProductDataFetcher {
 		p.setIsAdult(input.getIsAdult() != null ? input.getIsAdult() : false);
 		p.setSku(input.getSku());
 
+		log.info("Creating product: name={}, sku={}, price={}, isAdult={}", input.getName(), input.getSku(),
+				input.getPrice(), input.getIsAdult());
+
 		return service.save(p).doOnSuccess(saved -> {
 			log.info("Product created: id={}, name={}", saved.getId(), saved.getName());
 			productSubscription.publish(saved);
@@ -69,6 +72,10 @@ public class ProductDataFetcher {
 				existing.setPrice(input.getPrice());
 			if (input.getSku() != null)
 				existing.setSku(input.getSku());
+			if (input.getIsAdult() != null)
+				existing.setIsAdult(input.getIsAdult());
+
+			log.info("Updating product id={}, name={}, isAdult={}", id, input.getName(), input.getIsAdult());
 
 			return service.save(existing).doOnSuccess(saved -> {
 				log.info("✅ Product updated: id={}, name={}", saved.getId(), saved.getName());
