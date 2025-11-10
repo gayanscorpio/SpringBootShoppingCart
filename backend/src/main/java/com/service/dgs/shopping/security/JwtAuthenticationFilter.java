@@ -1,12 +1,16 @@
 package com.service.dgs.shopping.security;
 
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilterChain;
+
+import io.jsonwebtoken.JwtException;
+
 import org.springframework.web.server.WebFilter;
 import reactor.core.publisher.Mono;
 
@@ -40,9 +44,9 @@ public class JwtAuthenticationFilter implements WebFilter {
 
 				return chain.filter(exchange).contextWrite(ReactiveSecurityContextHolder.withAuthentication(auth));
 
-			} catch (Exception e) {
-				System.err.println("Invalid JWT: " + e.getMessage());
-				return chain.filter(exchange);
+			} catch (JwtException e) {
+				exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
+				return exchange.getResponse().setComplete();
 			}
 		}
 

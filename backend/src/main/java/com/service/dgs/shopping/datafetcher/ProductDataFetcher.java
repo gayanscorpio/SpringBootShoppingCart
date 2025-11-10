@@ -2,6 +2,7 @@ package com.service.dgs.shopping.datafetcher;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 import com.netflix.graphql.dgs.*;
 import com.service.dgs.shopping.dto.types.CreateProductInput;
@@ -23,12 +24,14 @@ public class ProductDataFetcher {
 	private final ProductSubscription productSubscription;
 
 	@DgsQuery
+	@PreAuthorize("hasAnyRole('Admin', 'Customer')")
 	public Flux<Product> products() {
 		log.info("Fetching all products");
 		return service.findAll().doOnNext(p -> log.debug("Found product: id={}, name={}", p.getId(), p.getName()));
 	}
 
 	@DgsQuery
+	@PreAuthorize("hasAnyRole('Admin', 'Customer')")
 	public Mono<Product> productById(@InputArgument Long id) {
 		log.info("Fetching product by ID={}", id);
 		return service.findById(id).doOnSuccess(p -> {
@@ -41,6 +44,7 @@ public class ProductDataFetcher {
 	}
 
 	@DgsMutation
+	@PreAuthorize("hasRole('Admin')")
 	public Mono<Product> createProduct(@InputArgument("input") CreateProductInput input) {
 		log.info("Creating product: name={}, sku={}, price={}", input.getName(), input.getSku(), input.getPrice());
 		Product p = new Product();
@@ -60,6 +64,7 @@ public class ProductDataFetcher {
 	}
 
 	@DgsMutation
+	@PreAuthorize("hasRole('Admin')")
 	public Mono<Product> updateProduct(@InputArgument("id") Long id, @InputArgument("input") UpdateProductInput input) {
 		log.info("Updating product id={}", id);
 
@@ -85,6 +90,7 @@ public class ProductDataFetcher {
 	}
 
 	@DgsMutation
+	@PreAuthorize("hasRole('Admin')")
 	public Mono<Boolean> deleteProduct(@InputArgument Long id) {
 		log.info("Deleting product id={}", id);
 		return service.findById(id).flatMap(
