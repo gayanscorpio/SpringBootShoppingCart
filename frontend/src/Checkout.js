@@ -30,7 +30,7 @@ function Checkout() {
 
         const createPaymentIntent = async () => {
             try {
-                const response = await fetch("http://localhost:8080/graphql", {
+                const response = await fetch("http://localhost:8081/graphql", {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
@@ -75,7 +75,7 @@ function Checkout() {
             }));
 
             // GraphQL createOrder mutation
-            const response = await fetch("http://localhost:8080/graphql", {
+            const response = await fetch("http://localhost:8081/graphql", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

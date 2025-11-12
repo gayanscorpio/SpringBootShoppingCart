@@ -5,7 +5,7 @@ import { getMainDefinition } from "@apollo/client/utilities";
 import { onError } from "@apollo/client/link/error";
 
 // HTTP link (queries/mutations)
-const httpLink = new HttpLink({ uri: "http://localhost:8080/graphql" });
+const httpLink = new HttpLink({ uri: "http://localhost:8081/graphql" });
 
 // Auth link
 const authLink = new ApolloLink((operation, forward) => {
@@ -37,7 +37,7 @@ const errorLink = onError(({ networkError, graphQLErrors }) => {
 // WebSocket link (subscriptions)
 const wsLink = new GraphQLWsLink(
     createClient({
-        url: "ws://localhost:8080/subscriptions",
+        url: "ws://localhost:8081/subscriptions",
         connectionParams: () => {
             const token = localStorage.getItem("token");
             return token ? { Authorization: `Bearer ${token}` } : {};
