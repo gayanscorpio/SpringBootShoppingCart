@@ -4,10 +4,14 @@ import { createClient } from "graphql-ws";
 import { getMainDefinition } from "@apollo/client/utilities";
 import { onError } from "@apollo/client/link/error";
 
-// HTTP link (queries/mutations)
-const httpLink = new HttpLink({ uri: "http://localhost:8081/graphql" });
+// ✅ Apollo Gateway endpoint (single entry point)
+const GATEWAY_HTTP_URL = "http://localhost:4000/graphql"; //gateway access
+const GATEWAY_WS_URL = "ws://localhost:4000/subscriptions"; // optional for subscriptions
 
-// Auth link
+// HTTP link → All queries & mutations go through the Gateway
+const httpLink = new HttpLink({ uri: GATEWAY_HTTP_URL });
+
+// Auth link - Auth middleware
 const authLink = new ApolloLink((operation, forward) => {
     const token = localStorage.getItem("token");
     operation.setContext(({ headers = {} }) => ({
@@ -19,7 +23,7 @@ const authLink = new ApolloLink((operation, forward) => {
     return forward(operation);
 });
 
-// Error link
+// Error handler
 const errorLink = onError(({ networkError, graphQLErrors }) => {
     if (networkError && (networkError.statusCode === 401 || networkError.statusCode === 403)) {
         console.warn("🔒 Token expired or unauthorized. Logging out...");
@@ -37,7 +41,7 @@ const errorLink = onError(({ networkError, graphQLErrors }) => {
 // WebSocket link (subscriptions)
 const wsLink = new GraphQLWsLink(
     createClient({
-        url: "ws://localhost:8081/subscriptions",
+        url: GATEWAY_WS_URL,
         connectionParams: () => {
             const token = localStorage.getItem("token");
             return token ? { Authorization: `Bearer ${token}` } : {};
