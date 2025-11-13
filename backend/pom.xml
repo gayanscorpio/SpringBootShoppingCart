@@ -67,7 +67,6 @@
 		<dependency>
 			<groupId>io.asyncer</groupId>
 			<artifactId>r2dbc-mysql</artifactId>
-			<version>1.1.0</version>
 		</dependency>
 
 		<!-- DGS Core + Subscriptions -->
