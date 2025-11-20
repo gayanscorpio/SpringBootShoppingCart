@@ -5,6 +5,10 @@ import { Elements } from "@stripe/react-stripe-js";
 import CheckoutForm from "./CheckoutForm";
 import { clearCart } from "./slices/cartSlice";
 import { useNavigate } from "react-router-dom";
+import EnterPinModal from "./pin/EnterPinModal";
+import { CHECK_USER_PIN } from "./graphql/pinQueries";
+import { useLazyQuery } from '@apollo/client/react';
+import SetPinForm from "./pin/SetPinForm";
 
 const stripePromise = loadStripe(
     "pk_test_51SL0WCKVr55uZBWlWDYAsNFef10ZULkjdnuDHwmIChXjmVCHKaJU3rHnTZTOESepV841JQLXh13ql5BVo9qKw1wk00M2iJm8rl"
@@ -13,20 +17,51 @@ const stripePromise = loadStripe(
 function Checkout() {
     const dispatch = useDispatch();
     const navigate = useNavigate();
-    const items = useSelector((state) => state.carts.items);
 
+    const items = useSelector((state) => state.carts.items);
     const totalPrice = items.reduce(
         (sum, item) => sum + (item.price || 0) * (item.quantity || 1),
         0
     );
 
-    const [clientSecret, setClientSecret] = useState(null);
-    // 🧠 Get token from localStorage
+    const userId = localStorage.getItem("userId");
     const token = localStorage.getItem("token");
+    const hasAdultItems = items.some((item) => item.isAdult === true);
 
-    // Create Stripe PaymentIntent
+    const [showSetPin, setShowSetPin] = useState(false);
+    const [showEnterPin, setShowEnterPin] = useState(false);
+    const [pinVerified, setPinVerified] = useState(false);
+    const [clientSecret, setClientSecret] = useState(null);
+
+    // 🔍 Apollo Lazy Query
+    const [checkUserPin] = useLazyQuery(CHECK_USER_PIN);
+
+    // 🔐 Step 1: Before doing PaymentIntent, check PIN when adult items exist
+    useEffect(() => {
+        if (!hasAdultItems) {
+            setPinVerified(true);
+            return;
+        }
+
+        (async () => {
+            try {
+                const { data } = await checkUserPin({ variables: { userId } });
+
+                if (!data?.checkUserPin?.success) {
+                    setShowSetPin(true);  // user must create pin
+                } else {
+                    setShowEnterPin(true);  // User must enter existing PIN
+                }
+            } catch (err) {
+                console.error("Error checking PIN:", err);
+            }
+        })();
+    }, [hasAdultItems, userId, checkUserPin]);
+
+    // 💳 Step 2: Create Stripe Payment Intent AFTER pinVerified
     useEffect(() => {
         if (totalPrice === 0) return;
+        if (hasAdultItems && !pinVerified) return;
 
         const createPaymentIntent = async () => {
             try {
@@ -38,43 +73,95 @@ function Checkout() {
                     },
                     body: JSON.stringify({
                         query: `
-                     mutation {
-                      createPaymentIntent(amount: ${Math.round(totalPrice * 100)}) {
-                        clientSecret
-                        }
-                    }`,
+                            mutation {
+                                createPaymentIntent(amount: ${Math.round(totalPrice * 100)}) {
+                                    clientSecret
+                                }
+                            }
+                        `,
                     }),
                 });
 
-                if (!response.ok) {
-                    throw new Error(`Server returned ${response.status}`);
-                }
-                const result = await response.json();
-                if (result.errors) {
-                    console.error("GraphQL errors:", result.errors);
-                    throw new Error(result.errors[0]?.message || "GraphQL error");
-                }
-                setClientSecret(result.data?.createPaymentIntent?.clientSecret);
-            } catch (err) {
-                console.error("❌ Failed to create payment intent:", err);
-                alert("Failed to start checkout — please log in again.");
+                const data = await response.json();
+                setClientSecret(data.data?.createPaymentIntent?.clientSecret);
+            } catch (error) {
+                console.error("❌ PaymentIntent error:", error);
+                alert("Failed to start checkout. Please login again.");
             }
         };
 
         createPaymentIntent();
-    }, [totalPrice, token]);
+    }, [pinVerified, totalPrice, token, hasAdultItems]);
 
-    // Handle successful payment
-    const handleSuccess = async (paymentIntent) => {
+    if (items.length === 0) return <p>Your cart is empty 🛒</p>;
+
+    // ------------------------------
+    // Main Render
+    // ------------------------------
+    return (
+        <div style={{ padding: "20px" }}>
+            {showSetPin && ( //If no PIN → showSetPin = true → SetPinForm appears
+                <SetPinForm
+                    userId={userId}
+                    onSuccess={() => {
+                        setShowSetPin(false);
+                        setPinVerified(true);
+                    }}
+                    onClose={() => setShowSetPin(false)}
+                />
+            )}
+
+            {showEnterPin && ( //If PIN exists → showEnterPin = true → EnterPinForm appears
+                <EnterPinModal
+                    userId={userId}
+                    onSuccess={() => {
+                        setShowEnterPin(false);
+                        setPinVerified(true);
+                    }}
+                    onRequireSetPin={() => {
+                        setShowEnterPin(false);
+                        setShowSetPin(true);
+                    }}
+                    onClose={() => setShowEnterPin(false)}
+                />
+            )}
+
+            {/* Waiting for PIN message */}
+            {!pinVerified && hasAdultItems && !showSetPin && !showEnterPin && (
+                <p>Waiting for PIN...</p>
+            )}
+
+
+            {/* Checkout content */}
+            {pinVerified && (
+                <>
+                    <h2>💳 Checkout</h2>
+                    <p>Total: <strong>${totalPrice.toFixed(2)}</strong></p>
+                    {clientSecret ? (
+                        <Elements stripe={stripePromise} options={{ clientSecret }}>
+                            <CheckoutForm clientSecret={clientSecret} onSuccess={handleSuccess} />
+                        </Elements>
+                    ) : (
+                        <p>Loading payment details...</p>
+                    )}
+                </>
+            )}
+        </div>
+    );
+
+    // ------------------------------
+    // 🧾 Order Creation After Payment successful payment
+    // ------------------------------
+    async function handleSuccess(paymentIntent) {
         try {
             const username = localStorage.getItem("username");
+
             const orderItems = items.map((item) => ({
                 productName: item.name,
                 quantity: item.quantity,
                 price: item.price,
             }));
 
-            // GraphQL createOrder mutation
             const response = await fetch("http://localhost:8081/graphql", {
                 method: "POST",
                 headers: {
@@ -83,20 +170,20 @@ function Checkout() {
                 },
                 body: JSON.stringify({
                     query: `
-            mutation CreateOrder($username: String!, $totalAmount: Float!, $items: [OrderItemInput!]!) {
-              createOrder(userEmail: $username, totalAmount: $totalAmount, items: $items) {
-                id
-                userEmail
-                totalAmount
-                paymentStatus
-                items {
-                  productName
-                  quantity
-                  price
-                }
-              }
-            }
-          `,
+                        mutation CreateOrder($username: String!, $totalAmount: Float!, $items: [OrderItemInput!]!) {
+                            createOrder(userEmail: $username, totalAmount: $totalAmount, items: $items) {
+                                id
+                                userEmail
+                                totalAmount
+                                paymentStatus
+                                items {
+                                    productName
+                                    quantity
+                                    price
+                                }
+                            }
+                        }
+                    `,
                     variables: { username, totalAmount: totalPrice, items: orderItems },
                 }),
             });
@@ -104,34 +191,15 @@ function Checkout() {
             const result = await response.json();
             const order = result.data.createOrder;
 
-            console.log("✅ Order saved:", order);
-
             dispatch(clearCart());
             setClientSecret(null);
 
-            // Navigate to Success page with order details
             navigate("/payments/Success", { state: { order } });
         } catch (err) {
-            console.error("❌ Failed to create order:", err);
-            alert("Payment succeeded but failed to save order!");
+            console.error("❌ Failed to save order:", err);
+            alert("Payment succeeded but order saving failed.");
         }
-    };
-
-    if (items.length === 0) return <p>Your cart is empty 🛒</p>;
-    if (!clientSecret) return <p>Loading payment details...</p>;
-
-    return (
-        <div style={{ padding: "20px" }}>
-            <h2>💳 Checkout</h2>
-            <p>
-                Total: <strong>${totalPrice.toFixed(2)}</strong>
-            </p>
-
-            <Elements stripe={stripePromise} options={{ clientSecret }}>
-                <CheckoutForm clientSecret={clientSecret} onSuccess={handleSuccess} />
-            </Elements>
-        </div>
-    );
+    }
 }
 
 export default Checkout;
