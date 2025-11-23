@@ -9,6 +9,7 @@ import EnterPinModal from "./pin/EnterPinModal";
 import { CHECK_USER_PIN } from "./graphql/pinQueries";
 import { useLazyQuery } from '@apollo/client/react';
 import SetPinForm from "./pin/SetPinForm";
+import ResetPinForm from './pin/RestPinForm'
 
 const stripePromise = loadStripe(
     "pk_test_51SL0WCKVr55uZBWlWDYAsNFef10ZULkjdnuDHwmIChXjmVCHKaJU3rHnTZTOESepV841JQLXh13ql5BVo9qKw1wk00M2iJm8rl"
@@ -26,10 +27,11 @@ function Checkout() {
 
     const userId = localStorage.getItem("userId");
     const token = localStorage.getItem("token");
-    const hasAdultItems = items.some((item) => item.isAdult === true);
+    const hasAdultItems = items.some((item) => item.isAdult);
 
     const [showSetPin, setShowSetPin] = useState(false);
     const [showEnterPin, setShowEnterPin] = useState(false);
+    const [showResetPin, setShowResetPin] = useState(false);
     const [pinVerified, setPinVerified] = useState(false);
     const [clientSecret, setClientSecret] = useState(null);
 
@@ -42,6 +44,12 @@ function Checkout() {
             setPinVerified(true);
             return;
         }
+
+        // 🚫 Prevent PIN recheck when user is:
+        // - resetting PIN
+        // - currently entering PIN
+        // - currently setting PIN
+        if (showResetPin || showEnterPin || showSetPin) return;
 
         (async () => {
             try {
@@ -56,7 +64,7 @@ function Checkout() {
                 console.error("Error checking PIN:", err);
             }
         })();
-    }, [hasAdultItems, userId, checkUserPin]);
+    }, [hasAdultItems, userId, checkUserPin, showResetPin, showEnterPin, showSetPin]);
 
     // 💳 Step 2: Create Stripe Payment Intent AFTER pinVerified
     useEffect(() => {
@@ -100,37 +108,49 @@ function Checkout() {
     // ------------------------------
     return (
         <div style={{ padding: "20px" }}>
-            {showSetPin && ( //If no PIN → showSetPin = true → SetPinForm appears
+            {/* PIN modals */}
+            {!showResetPin && showSetPin && ( //If no PIN → showSetPin = true → SetPinForm appears
                 <SetPinForm
                     userId={userId}
                     onSuccess={() => {
                         setShowSetPin(false);
                         setPinVerified(true);
+                        setShowEnterPin(false);
                     }}
                     onClose={() => setShowSetPin(false)}
                 />
             )}
 
-            {showEnterPin && ( //If PIN exists → showEnterPin = true → EnterPinForm appears
+            {!showResetPin && showEnterPin && ( //If PIN exists → showEnterPin = true → EnterPinForm appears
                 <EnterPinModal
                     userId={userId}
                     onSuccess={() => {
                         setShowEnterPin(false);
                         setPinVerified(true);
                     }}
-                    onRequireSetPin={() => {
+                    onForgotPin={() => {
                         setShowEnterPin(false);
-                        setShowSetPin(true);
+                        setShowResetPin(true);
                     }}
                     onClose={() => setShowEnterPin(false)}
                 />
             )}
 
-            {/* Waiting for PIN message */}
-            {!pinVerified && hasAdultItems && !showSetPin && !showEnterPin && (
-                <p>Waiting for PIN...</p>
+            {showResetPin && (
+                <ResetPinForm
+                    username={localStorage.getItem("username")}
+                    onSuccess={() => {
+                        setShowResetPin(false);
+                        setShowEnterPin(true); // Back to entering new PIN
+                    }}
+                    onCancel={() => setShowResetPin(false)}
+                />
             )}
 
+            {/* Waiting for PIN message */}
+            {!pinVerified && hasAdultItems && !showSetPin && !showEnterPin && !showResetPin && (
+                <p>Waiting for PIN...</p>
+            )}
 
             {/* Checkout content */}
             {pinVerified && (

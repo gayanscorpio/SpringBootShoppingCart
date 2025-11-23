@@ -27,3 +27,13 @@ export const CHECK_USER_PIN = gql`
   }
 `;
 
+export const RESET_USER_PIN = gql`
+  mutation ResetUserPin($username: String!, $password: String!, $newPin: String!) {
+    resetUserPin(username: $username, password: $password, newPin: $newPin) {
+      success
+      message
+    }
+  }
+`;
+
+
