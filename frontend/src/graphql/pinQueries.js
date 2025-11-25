@@ -23,6 +23,7 @@ export const CHECK_USER_PIN = gql`
     checkUserPin(userId: $userId) {
       success
       message
+      hasPin
     }
   }
 `;

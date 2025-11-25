@@ -36,7 +36,11 @@ function Checkout() {
     const [clientSecret, setClientSecret] = useState(null);
 
     // 🔍 Apollo Lazy Query
-    const [checkUserPin] = useLazyQuery(CHECK_USER_PIN);
+    const [checkUserPin] = useLazyQuery(CHECK_USER_PIN, {
+        fetchPolicy: "network-only",
+    });
+
+    console.log("Checkout — userId:", userId);
 
     // 🔐 Step 1: Before doing PaymentIntent, check PIN when adult items exist
     useEffect(() => {
@@ -55,10 +59,15 @@ function Checkout() {
             try {
                 const { data } = await checkUserPin({ variables: { userId } });
 
-                if (!data?.checkUserPin?.success) {
-                    setShowSetPin(true);  // user must create pin
+                const pinStatus = data?.checkUserPin;;
+                console.log("PIN Status:", pinStatus);
+
+                if (pinStatus?.hasPin === false) {
+                    console.log('New user → create PIN');
+                    setShowSetPin(true);
                 } else {
-                    setShowEnterPin(true);  // User must enter existing PIN
+                    // Existing user → enter PIN
+                    setShowEnterPin(true);
                 }
             } catch (err) {
                 console.error("Error checking PIN:", err);
@@ -126,7 +135,8 @@ function Checkout() {
                     userId={userId}
                     onSuccess={() => {
                         setShowEnterPin(false);
-                        setPinVerified(true);
+                        setPinVerified(true); // marks PIN verified, then Stripe checkout can proceed
+
                     }}
                     onForgotPin={() => {
                         setShowEnterPin(false);

@@ -23,6 +23,9 @@ function SetPinForm({ userId, onSuccess, onClose }) {
             return;
         }
 
+        console.log('pin : ', pin);
+        console.log('userId : ', userId);
+
         try {
             const { data } = await setUserPin({
                 variables: { input: { pin, userId } }
